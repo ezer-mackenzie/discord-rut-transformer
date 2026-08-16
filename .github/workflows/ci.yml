@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Quality and build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install Poetry
+        run: pipx install poetry==2.3.2
+      - name: Install dependencies
+        run: poetry install
+      - name: Check formatting
+        run: poetry run ruff format --check .
+      - name: Lint
+        run: poetry run ruff check .
+      - name: Type check
+        run: poetry run mypy
+      - name: Build documentation
+        run: poetry run mkdocs build --strict
+      - name: Validate and build package
+        run: |
+          poetry check
+          poetry build
+
+  tests:
+    name: Tests (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12", "3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install Poetry
+        run: pipx install poetry==2.3.2
+      - name: Install dependencies
+        run: poetry install --without docs
+      - name: Run tests with coverage
+        run: poetry run pytest
+      - name: Upload coverage to Codecov
+        if: matrix.python-version == '3.14'
+        uses: codecov/codecov-action@v5
+        with:
+          files: coverage.xml
+          fail_ci_if_error: true
+          use_oidc: true
