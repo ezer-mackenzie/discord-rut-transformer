@@ -3,17 +3,58 @@ name: Publish to PyPI
 on:
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag to publish
+        required: true
+        default: v1.0.0
+        type: string
+
+env:
+  RELEASE_TAG: ${{ github.event.release.tag_name || inputs.tag }}
 
 permissions:
   contents: read
 
 jobs:
+  verify:
+    name: Verify release quality
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out release tag
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ env.RELEASE_TAG }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install Poetry
+        run: pipx install poetry==2.3.2
+
+      - name: Install dependencies
+        run: poetry install
+
+      - name: Run release checks
+        run: |
+          poetry run ruff format --check .
+          poetry run ruff check .
+          poetry run mypy
+          poetry run pytest
+          poetry run mkdocs build --strict
+          poetry check
+
   build:
     name: Build and validate distributions
     runs-on: ubuntu-latest
     steps:
       - name: Check out release tag
         uses: actions/checkout@v7
+        with:
+          ref: ${{ env.RELEASE_TAG }}
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -27,7 +68,7 @@ jobs:
         shell: bash
         run: |
           package_version="$(python -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')"
-          test "${GITHUB_REF_NAME}" = "v${package_version}"
+          test "${RELEASE_TAG}" = "v${package_version}"
 
       - name: Build distributions
         run: python -m build
@@ -40,7 +81,7 @@ jobs:
         run: |
           python -m venv /tmp/discord-rut-transformer-publish-test
           /tmp/discord-rut-transformer-publish-test/bin/python -m pip install dist/*.whl
-          /tmp/discord-rut-transformer-publish-test/bin/python -c "import discord_rut_transformer; from discord_rut_transformer import RutOption, RutTransformer, RutTransformError; assert discord_rut_transformer.__version__ == '${GITHUB_REF_NAME#v}'; print(RutOption, RutTransformer.__name__, RutTransformError.__name__)"
+          /tmp/discord-rut-transformer-publish-test/bin/python -c "import discord_rut_transformer; from discord_rut_transformer import RutOption, RutTransformer, RutTransformError; assert discord_rut_transformer.__version__ == '${RELEASE_TAG#v}'; print(RutOption, RutTransformer.__name__, RutTransformError.__name__)"
 
       - name: Upload distributions
         uses: actions/upload-artifact@v7
@@ -51,7 +92,7 @@ jobs:
 
   publish:
     name: Publish distributions to PyPI
-    needs: build
+    needs: [verify, build]
     runs-on: ubuntu-latest
     environment:
       name: pypi

@@ -15,6 +15,10 @@ The publish workflow verifies that the tag matches the package version, builds
 the wheel and source distribution, and publishes both to PyPI using Trusted
 Publishing. Read the Docs builds the same tag as versioned documentation.
 
+If a GitHub Release was published before the workflow was available, run
+**Publish to PyPI** manually from the Actions tab and enter the existing tag.
+Rerunning a historical workflow does not switch it to the new workflow file.
+
 Before the first release, a maintainer must configure the `pypi` GitHub
 environment and register `.github/workflows/publish.yml` as a trusted publisher
 for the `ezer-mackenzie/discord-rut-transformer` project on PyPI.
