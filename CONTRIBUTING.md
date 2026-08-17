@@ -40,5 +40,5 @@ By participating, you agree to follow [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
 
 Maintainers update the version in `pyproject.toml`, finalize the changelog,
 commit the release, create an annotated `vX.Y.Z` tag, and publish the artifacts.
-Breaking changes require a new major version. The tag-triggered release workflow
-publishes through PyPI Trusted Publishing; it does not use a long-lived API token.
+Breaking changes require a new major version. Publishing a GitHub Release starts
+the PyPI Trusted Publishing workflow; it does not use a long-lived API token.
