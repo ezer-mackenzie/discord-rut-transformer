@@ -49,4 +49,4 @@ def test_transform_error_has_default_message() -> None:
 
 
 def test_package_version_matches_stable_release() -> None:
-    assert __version__ == "1.0.0"
+    assert __version__ == "1.0.1"
