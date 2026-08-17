@@ -8,7 +8,7 @@ Releases are automated when a GitHub Release is published from a tag matching
 3. Move the changelog entries from `Unreleased` to the dated release heading.
 4. Run all checks documented in the contribution guide.
 5. Merge the release commit into `main`.
-6. Create and push an annotated tag, for example `v1.0.0`.
+6. Create and push an annotated tag, for example `v1.0.1`.
 7. Create and publish the corresponding GitHub Release.
 
 The publish workflow verifies that the tag matches the package version, builds
